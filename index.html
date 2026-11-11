@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101820">
+  <meta name="description" content="Offline-first vehicle notes, symptom checks and repair guides.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>AI Car Mechanic</title>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="logo">🔧</span><div><h1>AI Car Mechanic</h1><p>Your workshop companion</p></div></div>
+  <span id="connection" class="status">Checking…</span>
+</header>
+<nav class="tabs" aria-label="Main navigation">
+  <button class="tab active" data-page="identify">Identify</button>
+  <button class="tab" data-page="diagnose">Diagnose</button>
+  <button class="tab" data-page="repair">Repair</button>
+  <button class="tab" data-page="garage">My Garage</button>
+</nav>
+<main>
+  <section id="identify" class="page active">
+    <div class="hero"><div><span class="eyebrow">OFFLINE-FIRST TOOLKIT</span><h2>Know your car.<br>Understand the fix.</h2><p>Save vehicle details, check common symptoms and keep repair notes on this device.</p></div><div class="hero-icon">🚘</div></div>
+    <div class="notice">📴 Core guides and saved garage records work offline after the app has loaded once.</div>
+    <article class="panel">
+      <h2>Vehicle photo</h2>
+      <label class="upload">📷 Choose a car or component photo<input id="photo" type="file" accept="image/*" capture="environment"></label>
+      <img id="preview" class="preview hidden" alt="Selected vehicle reference">
+      <p class="muted small">Photo is used as a visual reference only in this starter. Automatic make/model recognition is not yet included.</p>
+    </article>
+    <article class="panel">
+      <h2>Add vehicle details</h2>
+      <form id="vehicle-form">
+        <div class="fields">
+          <label>Make<input id="make" placeholder="e.g. Ford" autocomplete="off"></label>
+          <label>Model<input id="model" placeholder="e.g. Focus" autocomplete="off"></label>
+          <label>Year<input id="year" inputmode="numeric" placeholder="e.g. 2018"></label>
+          <label>Engine / fuel<input id="engine" placeholder="e.g. 1.5 diesel"></label>
+          <label class="wide">Registration / VIN (optional)<input id="vin" placeholder="Store locally on this device"></label>
+          <label class="wide">Notes<textarea id="notes" rows="2" placeholder="Trim, mileage, service notes…"></textarea></label>
+        </div>
+        <button class="primary" type="submit">＋ Save to My Garage</button>
+      </form>
+    </article>
+  </section>
+
+  <section id="diagnose" class="page">
+    <div class="section-head"><span class="eyebrow">FIRST CHECKS</span><h2>What is the car doing?</h2><p>Choose a symptom to see possible causes and sensible next checks.</p></div>
+    <article class="panel">
+      <label>Choose a symptom<select id="symptom">
+        <option>Engine warning light</option><option>Engine will not start</option><option>Overheating</option>
+        <option>Brake noise or vibration</option><option>Battery / charging problem</option>
+        <option>Suspension knocking</option><option>Gearbox slipping</option><option>Fluid leak</option>
+      </select></label>
+      <label class="spaced">More details<textarea id="symptom-detail" rows="3" placeholder="When does it happen? Any sounds, smells or warning messages?"></textarea></label>
+      <button class="primary" id="diagnose-btn">Check possible causes</button>
+    </article>
+    <div id="diagnosis" class="results"></div>
+    <div class="danger"><strong>Safety warning</strong><br>Stop driving for brake failure, severe overheating, an oil-pressure warning, smoke, fuel smell or steering problems. Arrange professional inspection or recovery.</div>
+  </section>
+
+  <section id="repair" class="page">
+    <div class="section-head"><span class="eyebrow">BUILT-IN LIBRARY</span><h2>Repair guides</h2><p>General educational checks available without an internet connection.</p></div>
+    <div id="guides" class="guide-list"></div>
+    <div class="notice">Vehicle-specific torque settings, fluid specifications, wiring diagrams and jacking points must come from the correct workshop manual.</div>
+  </section>
+
+  <section id="garage" class="page">
+    <div class="section-head"><span class="eyebrow">SAVED ON THIS DEVICE</span><h2>My Garage</h2><p>Your vehicle records stay in this browser on this device.</p></div>
+    <div id="garage-list" class="garage-list"></div>
+  </section>
+</main>
+<footer>AI Car Mechanic · Starter edition · Not a substitute for a qualified mechanic</footer>
+<script src="app.js"></script>
+</body>
+</html>

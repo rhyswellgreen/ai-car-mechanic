@@ -1,0 +1,10 @@
+{
+  "name": "AI Car Mechanic",
+  "short_name": "Car Mechanic",
+  "description": "Offline-first vehicle notes, symptom checks and repair guides.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#101820",
+  "theme_color": "#101820",
+  "icons": [{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]
+}
