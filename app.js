@@ -1,5 +1,8 @@
 const $ = s => document.querySelector(s);
 const STORAGE_KEY = "aicarmechanic.garage.v1";
+const SELECTED_VEHICLE_KEY = "aicarmechanic.repairVehicle.v1";
+// Set this to your deployed Cloudflare Worker URL in config.js.
+const REPAIR_API_URL = window.REPAIR_API_URL || "";
 let garage = [];
 try { garage = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch {}
 let chosenPhoto = "";
@@ -22,7 +25,20 @@ const guides = [
 {title:"Safe pre-drive visual check",level:"Beginner",time:"5–10 min",tools:["Tyre pressure gauge","Torch"],steps:["Check tyres for visible damage and correct pressures.","Check lights, mirrors, windows and wipers.","Look underneath for fresh fluid leaks without crawling under the vehicle.","Check that warning lights behave as described in the handbook.","Investigate any new noise, smell or warning before driving."],warning:"Never get underneath a vehicle supported only by a jack."}
 ];
 
-function saveGarage(){localStorage.setItem(STORAGE_KEY,JSON.stringify(garage));renderGarage();}
+function saveGarage(){
+ localStorage.setItem(STORAGE_KEY,JSON.stringify(garage));
+ if(!garage.some(v=>v.id===localStorage.getItem(SELECTED_VEHICLE_KEY)))localStorage.removeItem(SELECTED_VEHICLE_KEY);
+ renderGarage();renderRepairVehicleOptions();
+}
+function vehicleLabel(v){return [v.year,v.make,v.model,v.engine].filter(Boolean).join(" · ")||"Vehicle";}
+function renderRepairVehicleOptions(){
+ const select=$("#repair-vehicle");if(!select)return;
+ const previous=localStorage.getItem(SELECTED_VEHICLE_KEY)||select.value;
+ select.innerHTML="";
+ const first=document.createElement("option");first.value="";first.textContent=garage.length?"Choose a vehicle…":"No vehicles in My Garage yet";select.append(first);
+ garage.forEach(v=>{const o=document.createElement("option");o.value=v.id;o.textContent=vehicleLabel(v);select.append(o);});
+ if(garage.some(v=>v.id===previous))select.value=previous;
+}
 function renderGarage(){
  const host=$("#garage-list"); host.innerHTML="";
  if(!garage.length){host.innerHTML='<div class="panel muted">No vehicles saved yet. Add one from the Identify tab.</div>';return;}
@@ -70,7 +86,48 @@ $("#diagnose-btn").onclick=()=>{
  const note=document.createElement("p");note.className="small muted";note.textContent="Your notes: "+($("#symptom-detail").value||"None added");
  card.append(h,p,ul,note);host.append(card);
 };
+function showRepairMessage(message,isError=false){
+ const host=$("#repair-results");host.innerHTML="";
+ const card=document.createElement("article");card.className="result-card";
+ const p=document.createElement("p");p.textContent=message;if(isError)p.style.color="#ffb5aa";card.append(p);host.append(card);
+}
+function renderAIAnswer(answer,vehicle,question){
+ const host=$("#repair-results");host.innerHTML="";
+ const card=document.createElement("article");card.className="result-card";
+ const h=document.createElement("h3");h.textContent="AI repair guide · "+vehicleLabel(vehicle);
+ const q=document.createElement("p");q.className="meta";q.textContent="Your request: "+question;
+ const body=document.createElement("div");body.className="ai-answer";
+ // Render plain text safely; preserve headings, lists and paragraphs without injecting HTML.
+ answer.split(/\n{2,}/).forEach(block=>{
+  const trimmed=block.trim();if(!trimmed)return;
+  if(/^#{1,3}\s/.test(trimmed)){const heading=document.createElement("h4");heading.textContent=trimmed.replace(/^#{1,3}\s*/,"");body.append(heading);}
+  else if(trimmed.split("\n").every(line=>/^\s*(?:[-*•]|\d+[.)])\s+/.test(line))){
+   const ordered=/^\s*\d+[.)]/.test(trimmed);const list=document.createElement(ordered?"ol":"ul");
+   trimmed.split("\n").forEach(line=>{const li=document.createElement("li");li.textContent=line.replace(/^\s*(?:[-*•]|\d+[.)])\s+/,"");list.append(li);});body.append(list);
+  } else {const para=document.createElement("p");para.textContent=trimmed.replace(/^\*\*(.*?)\*\*$/s,"$1");body.append(para);}
+ });
+ card.append(h,q,body);host.append(card);
+}
+async function runRepairSearch(){
+ const vehicleId=$("#repair-vehicle").value,question=$("#repair-query").value.trim(),button=$("#repair-search-btn");
+ if(!vehicleId){alert("Please select a vehicle from My Garage first.");$("#repair-vehicle").focus();return;}
+ if(!question){alert("Please describe the repair you want help with.");$("#repair-query").focus();return;}
+ if(!REPAIR_API_URL){showRepairMessage("The AI service has not been connected yet. Deploy the Cloudflare Worker and add its URL to config.js, following SETUP-AI.txt.",true);return;}
+ const vehicle=garage.find(v=>v.id===vehicleId);if(!vehicle){alert("That vehicle is no longer in My Garage. Please choose it again.");renderRepairVehicleOptions();return;}
+ localStorage.setItem(SELECTED_VEHICLE_KEY,vehicleId);
+ button.disabled=true;button.textContent="Generating your repair guide…";showRepairMessage("The AI mechanic is preparing guidance for your selected vehicle…");
+ try{
+  const response=await fetch(REPAIR_API_URL.replace(/\/$/,"")+"/repair",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({vehicle:{year:vehicle.year,make:vehicle.make,model:vehicle.model,engine:vehicle.engine},question})});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||"The repair service returned an error ("+response.status+").");
+  if(!data.answer)throw new Error("The AI service returned an empty answer. Please try again.");
+  renderAIAnswer(data.answer,vehicle,question);
+ }catch(error){showRepairMessage(error.message||"Could not contact the AI repair service. Check your internet connection and try again.",true);}
+ finally{button.disabled=false;button.textContent="Ask AI for a repair guide";}
+}
+$("#repair-vehicle").addEventListener("change",e=>{if(e.target.value)localStorage.setItem(SELECTED_VEHICLE_KEY,e.target.value);else localStorage.removeItem(SELECTED_VEHICLE_KEY);});
+$("#repair-search-btn").addEventListener("click",runRepairSearch);
 function updateConnection(){const el=$("#connection");el.textContent=navigator.onLine?"● Online":"● Offline ready";el.style.color=navigator.onLine?"#8de0ad":"#ffd08b";}
 window.addEventListener("online",updateConnection);window.addEventListener("offline",updateConnection);
 if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));}
-updateConnection();renderGarage();renderGuides();
+updateConnection();renderGarage();renderRepairVehicleOptions();renderGuides();

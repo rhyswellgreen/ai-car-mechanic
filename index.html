@@ -63,9 +63,21 @@
   </section>
 
   <section id="repair" class="page">
-    <div class="section-head"><span class="eyebrow">BUILT-IN LIBRARY</span><h2>Repair guides</h2><p>General educational checks available without an internet connection.</p></div>
+    <div class="section-head"><span class="eyebrow">AI REPAIR ASSISTANT</span><h2>What do you want to fix?</h2><p>Select the exact vehicle from My Garage first. The AI will tailor its guidance to that car.</p></div>
+    <article class="panel">
+      <label for="repair-vehicle">1. Choose a vehicle
+        <select id="repair-vehicle" required><option value="">Choose a vehicle…</option></select>
+      </label>
+      <label class="spaced" for="repair-query">2. Describe the repair or change
+        <textarea id="repair-query" rows="3" maxlength="1600" placeholder="e.g. How do I replace the front brake pads?"></textarea>
+      </label>
+      <button class="primary" id="repair-search-btn" type="button">Ask AI for a repair guide</button>
+      <p class="small muted">AI answers require an internet connection. Your selected vehicle details and repair question are sent to the secure repair service. Registration/VIN and garage notes are not sent.</p>
+    </article>
+    <div id="repair-results" class="results" aria-live="polite"></div>
+    <div class="notice">Safety: AI guidance can be incomplete or incorrect. Verify all procedures, torque values, fluids and parts against the exact workshop manual. Do not attempt safety-critical work beyond your training.</div>
+    <div class="section-head"><span class="eyebrow">OFFLINE LIBRARY</span><h2>General repair guides</h2><p>These guides remain available without an internet connection.</p></div>
     <div id="guides" class="guide-list"></div>
-    <div class="notice">Vehicle-specific torque settings, fluid specifications, wiring diagrams and jacking points must come from the correct workshop manual.</div>
   </section>
 
   <section id="garage" class="page">
@@ -74,6 +86,7 @@
   </section>
 </main>
 <footer>AI Car Mechanic · Starter edition · Not a substitute for a qualified mechanic</footer>
+<script src="config.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

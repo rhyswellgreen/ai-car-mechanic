@@ -1,0 +1,38 @@
+AI REPAIR SERVICE — SETUP
+=========================
+
+IMPORTANT
+The static website is hosted on GitHub Pages, which cannot safely store an OpenAI API key. This project therefore uses a Cloudflare Worker as a small private server-side proxy. The API key is stored as a Cloudflare encrypted secret and is never sent to the iPhone/browser.
+
+PART A — DEPLOY THE SECURE AI SERVICE (one-time)
+1. Create/sign in to a Cloudflare account: https://dash.cloudflare.com/
+2. Install Node.js (LTS) on a computer: https://nodejs.org/
+3. Open a terminal/Command Prompt and change directory into this project's worker folder.
+4. Run: npx wrangler login
+5. Run: npx wrangler deploy
+   The command prints a Worker URL, normally https://ai-car-mechanic-api.YOUR-SUBDOMAIN.workers.dev
+6. Add your OpenAI API key as an encrypted secret (do not paste it into any app file):
+   npx wrangler secret put OPENAI_API_KEY
+   Paste the key only into the terminal prompt. Never commit it to GitHub or put it in config.js.
+7. If your OpenAI project cannot use the configured model, edit OPENAI_MODEL in worker/wrangler.toml to a model enabled for your API project, then deploy again.
+
+PART B — CONNECT THE WEBSITE
+1. Open config.js in the project root.
+2. Set window.REPAIR_API_URL to the Worker URL from step A, for example:
+   window.REPAIR_API_URL = "https://ai-car-mechanic-api.YOUR-SUBDOMAIN.workers.dev";
+   Do not add /repair to the URL.
+3. Upload the updated project-root files to the existing GitHub repository and let GitHub Pages publish.
+4. Open the app in Safari while online. If the old cached version appears, close the home-screen app, open the website in Safari, refresh, then reopen the home-screen icon. The service worker cache has been versioned to v2.
+
+PART C — TEST
+1. Add at least one vehicle in My Garage.
+2. Open Repair, choose that exact vehicle, and ask a simple question such as "How do I check the engine oil level?"
+3. Confirm the answer identifies the selected vehicle and contains appropriate caveats.
+
+SECURITY / OPERATING NOTES
+- The Worker only accepts browser requests whose Origin is https://rhyswellgreen.github.io. If you later move the site to another domain, update the allowed Origin in worker/index.js and redeploy.
+- The Worker limits request size and validates required fields, but this starter does not include per-user authentication, a durable rate limiter, billing limits or abuse protection. Before making it widely public, configure Cloudflare rate limiting/WAF rules and set spending/usage limits in your OpenAI API project. Origin checks alone are not authentication and can be spoofed by non-browser clients.
+- The AI feature needs internet access and an OpenAI API account with API billing/credits. ChatGPT subscriptions do not include API usage.
+- Only vehicle year/make/model/engine and the typed repair question are sent to the AI service. VIN/registration and garage notes are deliberately excluded.
+- AI-generated repair instructions may be wrong or incomplete. Always verify vehicle-specific torque values, parts and procedures with the correct workshop manual. Use a qualified mechanic for safety-critical work.
+- The app's existing garage remains stored in local browser storage; this change does not migrate or delete it.
